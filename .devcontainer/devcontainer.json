@@ -1,30 +1,30 @@
 {
-    "name": "ESP-IDF v5.5",
+    "name": "ESP-IDF",
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
-    "workspaceFolder": "/workspaces",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/devops-embedded-03,type=bind",
+    "workspaceFolder": "/workspaces/devops-embedded-03",
+    "postStartCommand": "git config --global --add safe.directory '*'",
     "mounts": [
-        "source=extensionCache,target=/root/.vscode-server/extensions,type=volume",
-        "source=/dev,target=/dev,type=bind",
-        "source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+        "source=extensionCache,target=/root/.vscode-server/extensions,type=volume"
     ],
     "runArgs": [
         "--privileged"
     ],
-    "postCreateCommand": "git config --system --add safe.directory ${containerWorkspaceFolder}",
     "customizations": {
-        "settings": {
-            "terminal.integrated.defaultProfile.linux": "bash",
-            "idf.espIdfPath": "/opt/esp/idf",
-            "idf.toolsPath": "/opt/esp",
-            "idf.gitPath": "/usr/bin/git",
-            "idf.pythonBinPath": "/opt/esp/python_env/idf5.4_py3.12_env/bin/python"
+        "vscode": {
+            "extensions": [
+                "espressif.esp-idf-extension",
+                "github.vscode-github-actions",
+                "ms-vscode.cpptools-extension-pack"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "idf.espIdfPath": "/opt/esp/idf",
+                "idf.toolsPath": "/opt/esp",
+                "idf.gitPath": "/usr/bin/git"
+            }
         }
-    },
-    "containerEnv": {
-        "LC_ALL": "C.UTF-8",
-        "LANG": "C.UTF-8"
     }
 }

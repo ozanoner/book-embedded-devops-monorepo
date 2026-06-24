@@ -1,9 +1,13 @@
-FROM espressif/idf:v5.5
+FROM espressif/idf:v6.0
 
-RUN apt update && apt install -y tree vim-tiny
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+RUN apt-get update -y && apt-get install udev tree vim-tiny -y
+
 RUN echo "source /opt/esp/idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
 RUN echo "set -o vi" >> ~/.bashrc
 
 ENTRYPOINT [ "/opt/esp/entrypoint.sh" ]
 
-CMD ["/bin/bash"]
+CMD ["/bin/bash", "-c"]
