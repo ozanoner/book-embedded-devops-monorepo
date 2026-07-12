@@ -16,8 +16,11 @@ def _press_button(wokwi: Any, duration_ms: int) -> None:
 @pytest.mark.generic
 @pytest.mark.parametrize("app_path", [APP_PATH], indirect=True)
 @pytest.mark.parametrize("target", ["esp32", "esp32c3"], indirect=True)
+@pytest.mark.parametrize("config", ["config1", "config2"], indirect=True)
 def test_button_behaviors(dut: Any, wokwi: Any) -> None:
     """Test button behaviors for both short and long presses."""
+
+    time.sleep(3)
 
     # Test Short Press Behavior
     _press_button(wokwi, duration_ms=150)
