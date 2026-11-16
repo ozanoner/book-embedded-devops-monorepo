@@ -2,10 +2,10 @@ name: ESP32 Build and Flash
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   push:
-    branches: [ master ]
-    tags: [ 'v*' ]
+    branches: [ main ]
+    tags: [ 'ch03-v*' ]
 
 jobs:
   build:
