@@ -1,0 +1,56 @@
+name: Build and Test ESP-IDF Applications
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [esp32, esp32c3]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create Empty .env
+        run: touch .env
+
+      - name: Build in Dev Container
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: |
+            cd button-app
+            idf-ci build run --target ${{ matrix.target }}
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp-binaries-${{ matrix.target }}
+          path: button-app/build_${{ matrix.target }}_*
+          if-no-files-found: error
+
+      - name: Run Pytest in Dev Container
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          env: |
+            WOKWI_CLI_TOKEN=${{ secrets.WOKWI_CLI_TOKEN }}
+          runCmd: |
+            cd button-app
+            python -m pytest ./test_button_app.py \
+              --target ${{ matrix.target }} \
+              --wokwi-diagram "./diagram.${{ matrix.target }}.json" \
+              --embedded-services idf,wokwi \
+              --junitxml="report_${{ matrix.target }}.xml"
+
+      - name: Upload Pytest JUnit Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.target }}
+          path: button-app/report_${{ matrix.target }}.xml
