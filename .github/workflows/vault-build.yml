@@ -44,6 +44,14 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Provide the ESP Insights key for Chapter 5
+        if: matrix.chapter == 'ch05'
+        env:
+          ESP_INSIGHTS_AUTH_KEY: ${{ secrets.ESP_INSIGHTS_AUTH_KEY }}
+        run: |
+          # The application embeds this file at build time and the repository does not carry it.
+          # Without a secret the build still compiles, but the firmware cannot authenticate.
+          printf '%s\n' "${ESP_INSIGHTS_AUTH_KEY:-placeholder}" > "${{ matrix.chapter }}/${{ matrix.app }}/main/insights_auth_key.txt"
       - name: Build ${{ matrix.chapter }} ${{ matrix.app }} for ${{ matrix.target }}
         uses: espressif/esp-idf-ci-action@v1
         with:
