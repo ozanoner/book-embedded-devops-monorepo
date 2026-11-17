@@ -1,0 +1,31 @@
+# secrets and local keys
+.env
+*.pem
+*.key
+keys/
+insights_auth_key.txt
+
+# ESP-IDF build output and local configuration
+build/
+build_*/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# scratch and logs
+tmp/
+log/
+*.log
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest_embedded_log/
+
+# editors
+.vscode/
+.idea/
+.clangd/
+.ccls-cache/

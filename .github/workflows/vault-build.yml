@@ -1,0 +1,94 @@
+name: Vault build
+
+on:
+  workflow_dispatch:
+    inputs:
+      chapters:
+        description: "all, or a comma separated list such as ch02,ch04"
+        default: all
+        type: string
+      targets:
+        description: "comma separated Espressif targets"
+        default: esp32,esp32c3
+        type: string
+      run_tests:
+        description: "also run the chapter tests that need a Wokwi token"
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+      count: ${{ steps.m.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the matrix
+        id: m
+        env:
+          CHAPTERS: ${{ inputs.chapters }}
+          TARGETS: ${{ inputs.targets }}
+        run: python3 tools/plan_matrix.py
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Provide the ESP Insights key for Chapter 5
+        if: matrix.chapter == 'ch05'
+        env:
+          ESP_INSIGHTS_AUTH_KEY: ${{ secrets.ESP_INSIGHTS_AUTH_KEY }}
+        run: |
+          # The application embeds this file at build time and the repository does not carry it.
+          # Without a secret the build still compiles, but the firmware cannot authenticate.
+          printf '%s\n' "${ESP_INSIGHTS_AUTH_KEY:-placeholder}" > "${{ matrix.chapter }}/${{ matrix.app }}/main/insights_auth_key.txt"
+      - name: Build ${{ matrix.chapter }} ${{ matrix.app }} for ${{ matrix.target }}
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v6.0
+          target: ${{ matrix.target }}
+          path: ${{ matrix.chapter }}/${{ matrix.app }}
+
+  test:
+    needs: plan
+    if: inputs.run_tests && needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Chapter 4 integration test
+        if: ${{ contains(inputs.chapters, 'all') || contains(inputs.chapters, 'ch04') }}
+        run: |
+          cd ch04
+          touch .env
+          docker run --rm --privileged \
+            --env-file .env \
+            -e WOKWI_CLI_TOKEN \
+            -v "$PWD":/workspaces/devops-embedded-04 \
+            -w /workspaces/devops-embedded-04 \
+            espressif/idf:v6.0 \
+            bash -lc "idf.py -C blinky build && robot --outputdir tmp/ tests/wokwi_serial.robot"
+      - name: Chapter 5 pytest-embedded
+        if: ${{ contains(inputs.chapters, 'all') || contains(inputs.chapters, 'ch05') }}
+        run: |
+          cd ch05
+          touch .env
+          docker run --rm --privileged --network host \
+            --env-file .env \
+            -e WOKWI_CLI_TOKEN \
+            -v "$PWD":/workspaces/devops-embedded-05 \
+            -w /workspaces/devops-embedded-05 \
+            espressif/idf:v6.0 \
+            bash -lc "python -m pytest button-app -q"
