@@ -3,5 +3,6 @@
   { "chapter": "ch03", "app": "blinky",     "targets": ["esp32", "esp32c3"] },
   { "chapter": "ch04", "app": "blinky",     "targets": ["esp32"] },
   { "chapter": "ch05", "app": "button-app", "targets": ["esp32", "esp32c3"] },
-  { "chapter": "ch06", "app": "blinky",     "targets": ["esp32"] }
+  { "chapter": "ch06", "app": "blinky",     "targets": ["esp32"] },
+  { "chapter": "ch07", "app": "button-app", "targets": ["esp32c3"] }
 ]
